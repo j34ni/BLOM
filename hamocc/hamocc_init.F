@@ -47,8 +47,8 @@ c******************************************************************************
       use mo_bgcmean,    only: alloc_mem_bgcmean
       use mo_fedep,      only: ini_fedep,fedepfile
       use mo_ndep,       only: ini_ndep,ndepfile
-      use mo_Gdata_read, only: inidic,inialk,inipo4,inioxy,inino3,inisil,
-     .                         inid13c,inid14c
+      use mo_Gdata_read, only: inidic,inialk,inipo4,inioxy,inino3,
+     .                         inisil,inid13c,inid14c
       use mo_riverinpt,  only: ini_riverinpt,rivinfile
       use mo_intfcblom,  only: alloc_mem_intfcblom,nphys,
      .                         bgc_dx,bgc_dy,bgc_dp,bgc_rho,
