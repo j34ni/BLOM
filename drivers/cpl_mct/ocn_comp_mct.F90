@@ -64,7 +64,7 @@ module ocn_comp_mct
                         ! averaging before being sent
 
    integer :: &
-      lsize, &          ! Size of attribute vector
+      lsizeav, &        ! Size of attribute vector
       jjcpl, &          ! y-dimension of local ocean domain to send/receive
                         ! fields to coupler
       nsend, &          ! Number of fields to be sent to coupler
@@ -187,17 +187,17 @@ module ocn_comp_mct
       ! Initialize mct ocn domain (needs ocn initialization info)
 
       if (mnproc == 1) then
-         write (lp, *) 'blom: ocn_init_mct: lsize', lsize
+         write (lp, *) 'blom: ocn_init_mct: lsizeav', lsizeav
       endif
    
-      call domain_mct(gsMap_ocn, dom_ocn, lsize, perm, jjcpl)
+      call domain_mct(gsMap_ocn, dom_ocn, lsizeav, perm, jjcpl)
    
       ! Inialize mct attribute vectors
 
-      call mct_aVect_init(x2o_o, rList = seq_flds_x2o_fields, lsize = lsize)
+      call mct_aVect_init(x2o_o, rList = seq_flds_x2o_fields, lsize = lsizeav)
       call mct_aVect_zero(x2o_o)
    
-      call mct_aVect_init(o2x_o, rList = seq_flds_o2x_fields, lsize = lsize) 
+      call mct_aVect_init(o2x_o, rList = seq_flds_o2x_fields, lsize = lsizeav) 
       call mct_aVect_zero(o2x_o)
 
       nsend = mct_avect_nRattr(o2x_o)
@@ -214,7 +214,7 @@ module ocn_comp_mct
       allocate(sbuff(1-nbdy:idm+nbdy,1-nbdy:jdm+nbdy,nsend))
       tlast_coupled = 0._r8
       call sumsbuff_mct(nsend, sbuff, tlast_coupled)
-      call export_mct(o2x_o, lsize, perm, jjcpl, nsend, sbuff, tlast_coupled)
+      call export_mct(o2x_o, lsizeav, perm, jjcpl, nsend, sbuff, tlast_coupled)
       if (nreg == 2) then
          call seq_infodata_PutData(infodata, ocn_prognostic = .true., &
                                    ocnrof_prognostic = .true., &
@@ -275,7 +275,7 @@ module ocn_comp_mct
 
          if (nint(tlast_coupled) == 0) then
             ! Obtain import state from driver
-            call import_mct(x2o_o, lsize, perm, jjcpl)
+            call import_mct(x2o_o, lsizeav, perm, jjcpl)
          endif
       
          ! Advance the model a time step
@@ -286,7 +286,7 @@ module ocn_comp_mct
 
          if (nint(ocn_cpl_dt_mct-tlast_coupled) == 0) then
             ! Return export state to driver and exit integration loop
-            call export_mct(o2x_o, lsize, perm, jjcpl, nsend, sbuff, &
+            call export_mct(o2x_o, lsizeav, perm, jjcpl, nsend, sbuff, &
                             tlast_coupled)
             exit blom_loop
          endif
@@ -375,7 +375,7 @@ module ocn_comp_mct
          jjcpl = jj
       endif
 
-      lsize = ii*jjcpl
+      lsizeav = ii*jjcpl
 
       if (nreg == 2) then
          gsize = itdm*(jtdm-1)
@@ -383,7 +383,7 @@ module ocn_comp_mct
          gsize = itdm*jtdm
       endif
 
-      allocate(gindex(lsize))
+      allocate(gindex(lsizeav))
 
       n = 0
       do j = 1, jjcpl
@@ -398,12 +398,12 @@ module ocn_comp_mct
       !  initialize a permutation array and sort gindex in-place
       ! ----------------------------------------------------------------
 
-      allocate(perm(lsize))
+      allocate(perm(lsizeav))
 
       call mct_indexset(perm)
-      call mct_indexsort(lsize, perm, gindex)
-      call mct_permute(gindex, perm, lsize)
-      call mct_gsMap_init(gsMap_ocn, gindex, mpicom_ocn, OCNID, lsize, gsize)
+      call mct_indexsort(lsizeav, perm, gindex)
+      call mct_permute(gindex, perm, lsizeav)
+      call mct_gsMap_init(gsMap_ocn, gindex, mpicom_ocn, OCNID, lsizeav, gsize)
 
       deallocate(gindex)
 
